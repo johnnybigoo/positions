@@ -31,6 +31,19 @@ rescue ActiveRecord::PendingMigrationError => e
   exit 1
 end
 RSpec.configure do |config|
+  config.before(:suite) do
+    # Install yarn
+    system("cd #{Rails.root.to_s} && yarn install --no-progress --no-audit --no-optional")
+
+    # Run bin/webpack
+    path = Rails.root.join('bin', 'webpack')
+    system(path.to_s)
+
+    # Ensure manifest exists
+    Timeout.timeout(10) do
+      loop until Webpacker.config.public_manifest_path.exist?
+    end
+  end
   # Remove this line if you're not using ActiveRecord or ActiveRecord fixtures
   config.fixture_path = "#{::Rails.root}/spec/fixtures"
 
